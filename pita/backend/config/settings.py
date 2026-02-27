@@ -17,6 +17,7 @@ WAKE_WORD = "pita"
 SAMP_RATE = 16000
 CHANNELS = 1
 INPUT_DEVICE_INDEX = 2 # Fixed for this environment
+WAKE_WINDOW = 0.8
 
 # STT Configuration (Faster Whisper)
 WHISPER_MODEL = "tiny"

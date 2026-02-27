@@ -9,7 +9,7 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parent.parent.parent
 if str(root_dir) not in sys.path:
     sys.path.append(str(root_dir))
-from pita.backend.config.settings import LOG_LEVEL, SILENCE_TIMEOUT
+from pita.backend.config.settings import LOG_LEVEL, SILENCE_TIMEOUT, WAKE_WORD, WAKE_WINDOW
 from pita.backend.core.event_bus import event_bus
 from pita.backend.core.state_manager import state_manager, LucyState
 
@@ -26,6 +26,8 @@ from pita.backend.executor.system import SystemController
 from pita.backend.memory.session import SessionMemory
 from pita.backend.voice.tts import TTSEngine
 from pita.backend.api.routes import WebSocketHandler
+from pita.backend.voice.wake import WakeWordDetector
+from pita.backend.intent.llm_provider import LLMProvider
 
 # Configure logging
 logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -54,6 +56,8 @@ class LucyAssistant:
         self.memory = SessionMemory()
         self.tts = TTSEngine()
         self.ws_handler = WebSocketHandler()
+        self.wake = WakeWordDetector(WAKE_WORD)
+        self.llm = LLMProvider()
         
         # 2. Subscribe to internal events
         event_bus.subscribe("SPEECH_CAPTURED", self.on_speech_captured)
@@ -62,6 +66,9 @@ class LucyAssistant:
         
         self.audio_buffer = []
         self.last_speech_time = 0
+        self.wake_buffer = []
+        self.wake_recording = False
+        self.wake_last_time = 0
 
     async def run(self):
         """Starts the main Lucy Core event loop."""
@@ -88,11 +95,23 @@ class LucyAssistant:
                 is_speech = self.vad.is_speech(chunk)
                 current_time = time.time()
                 
-                if is_speech:
-                    self.last_speech_time = current_time
-                    if state_manager.state == LucyState.IDLE:
-                        await state_manager.transition_to(LucyState.LISTENING, "Voice detected")
-                        self.audio_buffer = []
+                if state_manager.state == LucyState.IDLE:
+                    if is_speech:
+                        if not self.wake_recording:
+                            self.wake_recording = True
+                            self.wake_buffer = []
+                        self.wake_last_time = current_time
+                        self.wake_buffer.append(chunk)
+                    else:
+                        if self.wake_recording:
+                            silence = current_time - self.wake_last_time
+                            if silence > WAKE_WINDOW:
+                                text = await asyncio.to_thread(self.stt.transcribe, b"".join(self.wake_buffer))
+                                self.wake_recording = False
+                                self.wake_buffer = []
+                                if self.wake.has_wake_word(text):
+                                    await state_manager.transition_to(LucyState.LISTENING, "Wake word detected")
+                                    self.audio_buffer = []
                 
                 if state_manager.state == LucyState.LISTENING:
                     self.audio_buffer.append(chunk)
@@ -160,8 +179,15 @@ class LucyAssistant:
         
         # Final feedback
         await state_manager.transition_to(LucyState.SPEAKING, "Giving feedback")
-        await event_bus.publish("SYSTEM_RESPONSE", {"text": final_result})
-        await asyncio.to_thread(self.tts.speak, final_result)
+        assistant_text = data.get("raw_text", "")
+        try:
+            sys_prompt = "You are Lucy, a helpful local assistant. Summarize actions briefly and respond conversationally."
+            prompt = f"User: {data.get('raw_text','')}\nActions result: {final_result}\nRespond:"
+            assistant_text = await asyncio.to_thread(self.llm.generate, prompt, sys_prompt)
+        except Exception as e:
+            assistant_text = final_result
+        await event_bus.publish("SYSTEM_RESPONSE", {"text": assistant_text})
+        await asyncio.to_thread(self.tts.speak, assistant_text)
         
         await asyncio.sleep(1.0) # Let user see/hear
         await state_manager.transition_to(LucyState.IDLE, "Ready")
