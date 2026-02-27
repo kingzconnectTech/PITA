@@ -1,0 +1,204 @@
+/* Color Palette - Updated to Lucy/PITA AI OS Scheme */
+:root {
+    --bg-dark: #0a0a0f;
+    --accent-blue: #00f2ff;   /* Idle / Wake Mode */
+    --accent-green: #00ff88;  /* Listening */
+    --accent-orange: #ff8800; /* Processing */
+    --accent-purple: #7000ff; /* Speaking */
+    --text-main: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    
+    /* Semantic Status Colors */
+    --status-idle: var(--accent-blue);
+    --status-listening: var(--accent-green);
+    --status-processing: var(--accent-orange);
+    --status-speaking: var(--accent-purple);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+}
+
+#app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#avatar-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none; /* Allow clicking through to canvas if needed, but sub-elements will re-enable */
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    pointer-events: auto;
+}
+
+/* Top Bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    margin: 1rem;
+    border-radius: 15px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+#status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--status-idle);
+    box-shadow: 0 0 10px var(--status-idle);
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+/* Interaction Area */
+.interaction-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 2rem;
+}
+
+#response-text {
+    max-width: 600px;
+    padding: 1.5rem 2rem;
+    margin: 0 1rem;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    transition: opacity 0.5s ease;
+}
+
+#response-text.hidden {
+    opacity: 0;
+}
+
+/* Mic Container & Level Meter */
+#mic-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    pointer-events: auto;
+}
+
+.mic-level-meter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 20px;
+    height: 60px;
+}
+
+.meter-bar {
+    width: 8px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meter-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background-color: var(--status-speaking);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    transition: height 0.1s ease, background-color 0.2s ease;
+}
+
+.meter-label {
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 1px;
+}
+
+/* Bottom Controls */
+.controls-bar {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    pointer-events: auto;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.icon-button:hover {
+    transform: scale(1.1);
+}
+
+.icon-button img {
+    width: 24px;
+    height: 24px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}

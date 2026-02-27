@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PITA Dashboard</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="dark-theme">
+    <div id="dashboard-app">
+        <header class="glass-panel top-bar">
+            <div class="logo">PITA <span class="subtext">Dashboard</span></div>
+            <a href="index.html" class="back-link">Back to Assistant</a>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="grid-container">
+                <section class="glass-panel stat-card">
+                    <h3>System Status</h3>
+                    <div class="stat-value">Online</div>
+                </section>
+                <section class="glass-panel stat-card">
+                    <h3>Memory Usage</h3>
+                    <div class="stat-value">2.4 GB</div>
+                </section>
+                <section class="glass-panel stat-card">
+                    <h3>Response Time</h3>
+                    <div class="stat-value">120ms</div>
+                </section>
+                <section class="glass-panel settings-section">
+                    <h3>Settings</h3>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <label>Voice Recognition</label>
+                            <input type="checkbox" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label>3D Fidelity</label>
+                            <select>
+                                <option>High</option>
+                                <option>Medium</option>
+                                <option>Low</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
